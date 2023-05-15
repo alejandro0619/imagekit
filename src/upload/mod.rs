@@ -10,7 +10,7 @@ use tokio::fs::File;
 use tokio::io::BufReader;
 use tokio_util::codec::{BytesCodec, FramedRead};
 
-use crate::{ErrorResponse, ImageKit};
+use crate::{ErrorResponse, ImageKit, error::Error};
 
 use self::types::Response;
 
@@ -82,12 +82,12 @@ impl Default for Options {
 #[async_trait]
 pub trait Upload {
     /// Uploads an image with the provided `Options`
-    async fn upload(&self, opts: Options) -> Result<Response>;
+    async fn upload(&self, opts: Options) -> Result<Response, Error>;
 }
 
 #[async_trait]
 impl Upload for ImageKit {
-    async fn upload(&self, opts: Options) -> Result<Response> {
+    async fn upload(&self, opts: Options) -> Result<Response, Error> {
         let mut form = Form::new();
 
         form = form.text("fileName", opts.file_name.clone());
@@ -119,17 +119,9 @@ impl Upload for ImageKit {
             .post(opts.endpoint)
             .multipart(form)
             .send()
-            .await
-            .unwrap();
+            .await?;
 
-        if matches!(response.status(), StatusCode::OK) {
-            let result = response.json::<Response>().await.unwrap();
+         Ok(response.json::<Response>().await?)
 
-            return Ok(result);
-        }
-
-        let result = response.json::<ErrorResponse>().await.unwrap();
-
-        bail!(result.message);
     }
 }

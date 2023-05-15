@@ -1,5 +1,4 @@
 use std::env::var;
-
 use anyhow::{bail, Result};
 use http_auth_basic::Credentials;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
