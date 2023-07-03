@@ -4,5 +4,5 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrorResponse {
-    pub message: String,
+    pub message: String
 }

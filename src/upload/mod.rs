@@ -2,15 +2,15 @@ pub mod types;
 
 use std::io::Cursor;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use async_trait::async_trait;
 use reqwest::multipart::{Form, Part};
-use reqwest::{Body, StatusCode};
+use reqwest::Body;
 use tokio::fs::File;
 use tokio::io::BufReader;
 use tokio_util::codec::{BytesCodec, FramedRead};
 
-use crate::{ErrorResponse, ImageKit, error::Error};
+use crate::{ImageKit, error::Error};
 
 use self::types::Response;
 

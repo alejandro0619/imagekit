@@ -36,7 +36,7 @@ mod tests {
         let detail_result = imagekit.get_file_details(&upload_result.file_id).await;
         assert!(detail_result.is_ok());
 
-        let delete_result = imagekit.delete(upload_result.file_id).await;
+        let delete_result = imagekit.delete(&upload_result.file_id).await;
 
         assert!(delete_result.is_ok());
     }
@@ -46,7 +46,7 @@ mod tests {
         let imagekit = ImageKit::from_env().unwrap();
         let file = File::open("assets/ferris.jpeg").await.unwrap();
         let upload_file = UploadFile::from(file);
-        let opts = Options::new(upload_file, "ferris");
+        let opts = Options::new(upload_file, "ferri");
         let upload_result = imagekit.upload(opts).await.unwrap();
         let detail_result = imagekit.get_file_details(upload_result.file_id).await;
         assert!(detail_result.is_ok());
