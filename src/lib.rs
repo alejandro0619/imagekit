@@ -8,7 +8,7 @@ pub mod upload;
 pub use client::ImageKit;
 pub use delete::Delete;
 pub use management::file_details;
-pub use types::ErrorResponse;
+pub use management::search_file;
 pub use upload::Upload;
 
 #[cfg(test)]
@@ -17,6 +17,7 @@ mod tests {
 
     use super::delete::Delete;
     use super::file_details::Details;
+    use super::search_file::{FormatOptions, Search};
     use super::upload::types::FileType;
     use super::upload::{Options, Upload, UploadFile};
     use super::ImageKit;
@@ -40,7 +41,14 @@ mod tests {
 
         assert!(delete_result.is_ok());
     }
+    #[tokio::test]
+    async fn search_file() {
+        let imagekit = ImageKit::from_env().unwrap();
+        // To make a search based on formats
+        let search_result = imagekit.search_by_format(FormatOptions::Jpg).await;
+        assert!(search_result.is_ok());
 
+    }
     #[tokio::test]
     async fn uploads_and_retrieve_information() {
         let imagekit = ImageKit::from_env().unwrap();

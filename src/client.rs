@@ -1,6 +1,7 @@
 use std::env::var;
 
 use crate::error::Error;
+
 use anyhow::Result;
 use http_auth_basic::Credentials;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
