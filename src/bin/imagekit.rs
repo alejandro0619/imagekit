@@ -16,8 +16,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             FormatOpts::Jpg,
         ])
         .await?;
+    let search_by_formats_not_png = client.search_by_formats_not_in_range(&[FormatOpts::Png]).await?;
     println!("Search all the files by PNG --- {:#?}", search_png);
     println!("Search the file by the given name --- {:#?}", search_by_name);
     println!("Search all the files within the given formats --- {:#?}", search_png_jpg);
+    println!("Search all the files not within the given formats --- {:#?}", search_by_formats_not_png);
     Ok(())
 }

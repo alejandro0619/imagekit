@@ -1,3 +1,7 @@
+// TODO: Add documentation to the functions
+// TODO: Improve function names
+// TODO: Implement the builder pattern to be able to chain the searching functions and make the code more readable (Yep it'll lead us to rewrite this file from scratch)
+
 use std::fmt::Display;
 
 use crate::client::{ImageKit, FILES_ENDPOINT};
@@ -24,9 +28,9 @@ impl JoinExt<FormatOpts> for [FormatOpts] {
             .join(separator)
     }
 }
-/// Parameters for searching the Media library
-pub struct Parameters(Request);
-impl Parameters {
+/// RequestCriteria for searching the Media library
+pub struct RequestCriteria(Request);
+impl RequestCriteria {
     pub fn new(query_params: &[(String, String)]) -> Self {
         let url = Url::parse_with_params(FILES_ENDPOINT, query_params)
             .expect("Could not parse query params");
@@ -34,21 +38,21 @@ impl Parameters {
         Self(req)
     }
 }
-/// A trait for performing comparion searches on the Media Library. It returns SearchParameters
+/// A trait for performing comparion searches on the Media Library. It returns SearchRequestCriteria
 trait ComparisonSearch<T> {
-    fn greater(self, right: &T) -> Parameters;
-    fn greater_eq(self, right: &T) -> Parameters;
-    fn less(self, right: &T) -> Parameters;
-    fn less_eq(self, right: &T) -> Parameters;
+    fn greater(self, right: &T) -> RequestCriteria;
+    fn greater_eq(self, right: &T) -> RequestCriteria;
+    fn less(self, right: &T) -> RequestCriteria;
+    fn less_eq(self, right: &T) -> RequestCriteria;
 }
-/// A trait for performing in-range searches on the Media Library. It returns SearchParameters
+/// A trait for performing in-range searches on the Media Library. It returns SearchRequestCriteria
 trait RangeSearch<T> {
-    fn between(range: &[T]) -> Parameters;
-    fn not_between(range: &[T]) -> Parameters;
+    fn between(range: &[T]) -> RequestCriteria;
+    fn not_between(range: &[T]) -> RequestCriteria;
 }
-/// A trait for performing searches based-on partial equality (prefixes) or full equality on the Media Library. It returns SearchParameters
+/// A trait for performing searches based-on partial equality (prefixes) or full equality on the Media Library. It returns SearchRequestCriteria
 trait CommonSearch<T> {
-    fn eq(right: &T) -> Parameters;
+    fn eq(right: &T) -> RequestCriteria;
 }
 
 pub enum FormatOpts {
@@ -76,19 +80,19 @@ pub enum FormatOpts {
     Ico,
 }
 impl CommonSearch<FormatOpts> for FormatOpts {
-    fn eq(right: &FormatOpts) -> Parameters {
+    fn eq(right: &FormatOpts) -> RequestCriteria {
         let format = format!("format=\"{}\"", right);
-        Parameters::new(&[("searchQuery".to_string(), format)])
+        RequestCriteria::new(&[("searchQuery".to_string(), format)])
     }
 }
 impl RangeSearch<FormatOpts> for FormatOpts {
-    fn between(range: &[FormatOpts]) -> Parameters {
+    fn between(range: &[FormatOpts]) -> RequestCriteria {
         let formats = format!("format IN [{}]", range.join(","));
-        println!("{:?}", formats);
-        Parameters::new(&[("searchQuery".to_string(), formats)])
+        RequestCriteria::new(&[("searchQuery".to_string(), formats)])
     }
-    fn not_between(range: &[FormatOpts]) -> Parameters {
-        unimplemented!()
+    fn not_between(range: &[FormatOpts]) -> RequestCriteria {
+        let formats = format!("format NOT IN [{}]", range.join(","));
+        RequestCriteria::new(&[("searchQuery".to_string(), formats)])        
     }
 }
 
@@ -134,9 +138,9 @@ impl Filename {
 }
 
 impl CommonSearch<Filename> for Filename {
-    fn eq(right: &Filename) -> Parameters {
+    fn eq(right: &Filename) -> RequestCriteria {
         let format = format!("name=\"{}\"", right.0);
-        Parameters::new(&[("searchQuery".to_string(), format)])
+        RequestCriteria::new(&[("searchQuery".to_string(), format)])
     }
 }
 
@@ -146,10 +150,11 @@ pub trait Search {
     async fn search_by_format(&self, criteria: FormatOpts) -> Result<Vec<Response>>;
     ///Search files by a given collection of FormatOpts, in case no file were found by the given searching-criteria it will return a search error
     async fn search_by_formats(&self, criteria: &[FormatOpts]) -> Result<Vec<Response>>;
+    async fn search_by_formats_not_in_range(&self, criteria: &[FormatOpts]) -> Result<Vec<Response>>;
     /// Search files by the given Filename (including the file extension), in case no file were found by the given searching-criteria it will return an empty vector
     async fn search_by_filename(&self, criteria: Filename) -> Result<Response>;
-    /// Send a request to the imagekit API to search files by the given parameters. In case no file were found by the given searching-criteria it will return a search error
-    async fn send(&self, parameters: Parameters) -> Result<Vec<Response>>;
+    /// Send a request to the imagekit API to search files by the given RequestCriteria. In case no file were found by the given searching-criteria it will return a search error
+    async fn send(&self, params: RequestCriteria) -> Result<Vec<Response>>;
 }
 
 #[async_trait]
@@ -178,6 +183,18 @@ impl Search for ImageKit {
             )));
         }
     }
+    async fn search_by_formats_not_in_range(&self, criteria: &[FormatOpts]) -> Result<Vec<Response>> {
+        let not_between = FormatOpts::not_between(criteria);
+        let response = self.send(not_between).await?;
+        if !response.is_empty() {
+            return Ok(response);
+        } else {
+            return Err(Error::SearchError(format!(
+                "No files were found by the given formats: {}",
+                criteria.join(",")
+            )));
+        }
+    }
     async fn search_by_filename(&self, criteria: Filename) -> Result<Response> {
         let eq = Filename::eq(&criteria);
         let response = self.send(eq).await?;
@@ -191,7 +208,7 @@ impl Search for ImageKit {
             )));
         }
     }
-    async fn send(&self, params: Parameters) -> Result<Vec<Response>> {
+    async fn send(&self, params: RequestCriteria) -> Result<Vec<Response>> {
         let req = params.0;
         let response = self.client.execute(req).await?;
 
