@@ -17,7 +17,7 @@ mod tests {
 
     use super::delete::Delete;
     use super::file_details::Details;
-    use super::search_file::{FormatOptions, Search};
+    use super::search_file::{FormatOpts, Search};
     use super::upload::types::FileType;
     use super::upload::{Options, Upload, UploadFile};
     use super::ImageKit;
@@ -45,9 +45,8 @@ mod tests {
     async fn search_file() {
         let imagekit = ImageKit::from_env().unwrap();
         // To make a search based on formats
-        let search_result = imagekit.search_by_format(FormatOptions::Jpg).await;
+        let search_result = imagekit.search_by_format(FormatOpts::Jpg).await;
         assert!(search_result.is_ok());
-
     }
     #[tokio::test]
     async fn uploads_and_retrieve_information() {

@@ -31,6 +31,16 @@ pub enum Error {
     /// Internal server error 500, 502, 503, 504 error code
     #[error("Internal server error: {0}")]
     InternalServerError(String),
+    /// Bad Request error 400 error code
+    #[error("Bad Request: {0}")]
+    BadRequest(String),
+    /// This error raises when no file were found by the given searching-criteria
+    #[error("Search error occurred: {0}")]
+    SearchError(String),
+    // Represent any error that is not covered in the above cases nor in the API documentation. Give it a cool name, not just Unknown
+    #[error("Unknown error: {0}")]
+    UnknownAPIError(String),
+
 }
 
 impl Error {
@@ -44,7 +54,9 @@ impl Error {
             | StatusCode::INTERNAL_SERVER_ERROR
             | StatusCode::SERVICE_UNAVAILABLE
             | StatusCode::GATEWAY_TIMEOUT => Self::InternalServerError(reason.to_string()),
-            _ => unreachable!(), // The error codes should be these as documentation reports. However, this is attached to change in future breaking changes in the API
+            StatusCode::BAD_REQUEST => Self::BadRequest(reason.to_string()),
+            // Represent any other error from the API that is not covered in the above cases nor in the documentation
+            _ => Self::UnknownAPIError(reason.to_string()),
         }
     }
 }

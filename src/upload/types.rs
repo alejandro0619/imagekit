@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 /// An object containing the file or file version's id (versionId) and name.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct VersionInfo {
     pub id: String,
@@ -11,7 +11,7 @@ pub struct VersionInfo {
 /// Array of AITags associated with the image. If no AITags are set, it
 /// will be null. These tags can be added using the google-auto-tagging
 /// or aws-auto-tagging extensions.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AiTag {
     pub name: String,
@@ -20,7 +20,7 @@ pub struct AiTag {
 }
 
 /// The type of file could be either `image` or `non-image`.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Clone)]
 pub enum FileType {
     #[serde(rename = "image")]
     Image,
@@ -32,7 +32,7 @@ pub enum FileType {
 ///
 /// Refer: https://docs.imagekit.io/api-reference/upload-file-api/server-side-file-upload#response-code-and-structure-json
 /// Fields Documentation: https://docs.imagekit.io/api-reference/upload-file-api/server-side-file-upload#understanding-response
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Response {
     /// Unique fileId. Store this fileld in your database, as this will be used
